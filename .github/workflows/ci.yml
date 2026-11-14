@@ -1,0 +1,39 @@
+name: Research CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: ubuntu:26.04
+    env:
+      PYTHONPATH: src
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install runtime and test tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends openssl python3 python3-pytest ca-certificates
+          openssl version
+          python3 --version
+      - name: Compile Python
+        run: python3 -m compileall -q src tests
+      - name: Run tests
+        run: python3 -m pytest -q
+      - name: Validate CLI end-to-end
+        run: |
+          python3 -m pqc_eval build --contexts 1 --out /tmp/pqc-cases
+          python3 -m pqc_eval validate --dataset /tmp/pqc-cases
+          python3 -m pqc_eval run --dataset /tmp/pqc-cases --model claude-preview-only --conditions A,B --trials 1 --limit 2 --out /tmp/pqc-preview.jsonl
+          test -s /tmp/pqc-preview.jsonl

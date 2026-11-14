@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pqc-firmware-safety-eval"
+version = "0.1.0"
+description = "Reproducible AI security-judgment evaluation using FIPS 205 SLH-DSA firmware verification"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Mostafa Salman"}]
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[project.scripts]
+pqc-eval = "pqc_eval.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
