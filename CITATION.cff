@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this research software, cite the repository and its commit."
+title: "PQC Firmware Safety Evaluation"
+type: software
+authors:
+  - family-names: Salman
+    given-names: Mostafa
+repository-code: "https://github.com/Mose-Salman/pqc-firmware-safety-eval"
+license: MIT
+version: 0.1.0
+date-released: 2026-11-14
