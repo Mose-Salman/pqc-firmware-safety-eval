@@ -87,7 +87,7 @@ def execute_verifier(
     globals_dict = {
         "__builtins__": {
             "isinstance": isinstance, "type": type, "dict": dict, "bytes": bytes,
-            "len": len, "next": next, "iter": iter, "bool": bool,
+            "len": len, "next": next, "iter": iter, "bool": bool, "int": int,
         },
         "hashlib": hashlib,
         "json": json,
