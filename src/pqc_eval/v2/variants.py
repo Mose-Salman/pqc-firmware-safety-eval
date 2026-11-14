@@ -31,14 +31,25 @@ def render_style(family: str, variant: str, style: str) -> str:
     if style not in STYLES:
         raise ValueError("Unrecognized implementation style")
     fn = _parse_base(family, variant)
+    key_index = next(
+        (index for index, node in enumerate(fn.body)
+         if isinstance(node, ast.Assign)
+         and any(isinstance(target, ast.Name) and target.id == "key_id"
+                 for target in node.targets)),
+        None,
+    )
+    if key_index is None:
+        raise RuntimeError("Signing-key selection boundary was not found")
+    policy_checks = fn.body[4:key_index]
+    if len(policy_checks) not in (7, 8) or not all(
+        isinstance(node, ast.If) for node in policy_checks
+    ):
+        raise RuntimeError("Unexpected policy-check structure")
     if style == "inline":
         return render_verifier(family, variant)
     if style == "reordered":
-        # These eight independent policy checks follow input type validation.
-        checks = fn.body[4:12]
-        if len(checks) != 8 or not all(isinstance(node, ast.If) for node in checks):
-            raise RuntimeError("The base verifier structure has changed")
-        fn.body[4:12] = checks[::2] + checks[1::2]
+        # Only independently evaluated policy checks are reordered.
+        fn.body[4:key_index] = policy_checks[::2] + policy_checks[1::2]
         module = ast.Module(body=[fn], type_ignores=[])
     elif style == "delegated":
         fn.name = "_evaluate"
@@ -61,7 +72,7 @@ def render_style(family: str, variant: str, style: str) -> str:
         module = wrapper
     else:
         # Move independent policy checks to a separate boolean preflight stage.
-        policy_checks = copy.deepcopy(fn.body[4:12])
+        policy_checks = copy.deepcopy(policy_checks)
         preflight = ast.parse(
             "def _check_policy(manifest, image, policy):\n"
             "    return True\n"
@@ -71,7 +82,7 @@ def render_style(family: str, variant: str, style: str) -> str:
             "if not _check_policy(manifest, image, policy):\n"
             "    return False\n"
         ).body[0]
-        fn.body = fn.body[:4] + [guard] + fn.body[12:]
+        fn.body = fn.body[:4] + [guard] + fn.body[key_index:]
         module = ast.Module(body=[preflight, fn], type_ignores=[])
     ast.fix_missing_locations(module)
     return ast.unparse(module) + "\n"
