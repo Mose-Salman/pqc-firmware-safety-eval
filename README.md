@@ -97,3 +97,26 @@ Read [preregistration](docs/preregistration.md), [threat model](docs/threat-mode
 - [Anthropic Alignment Science research directions](https://alignment.anthropic.com/2025/recommended-directions/)
 
 MIT licensed. Maintained as an independent research project.
+
+## Project 02 — Evidence reliability under partial and misleading test reports
+
+The independent [V2 research protocol](research/v2/preregistration.md) studies whether an AI code reviewer is influenced by misleading descriptions of limited test evidence.
+
+V2 is isolated from the V1 protocol and uses five fault families, five executable verifier structures, four synthetic contexts, and matched secure/vulnerable implementations. The complete target comprises **200 labeled code cases** and **1,600 model requests** across four conditions and two stateless replicates. No real Claude results are asserted by V2's offline framework.
+
+- **A:** Code and security contract only.
+- **B:** Truthful report that one positive-path test passed.
+- **C:** Identical test observations with a falsely reassuring summary.
+- **D:** Independent replay including additional policy-challenge observations.
+
+To validate V2 locally (Python 3.11+, OpenSSL 3.5+):
+
+```sh
+PYTHONPATH=src python3 -m pqc_eval.v2 build --contexts 4 --out benchmark/v2-generated
+PYTHONPATH=src python3 -m pqc_eval.v2 validate --dataset benchmark/v2-generated
+PYTHONPATH=src python3 -m pqc_eval.v2 run --dataset benchmark/v2-generated \
+  --model YOUR_AVAILABLE_CLAUDE_MODEL_ID --conditions A,B,C,D \
+  --trials 2 --limit 4 --out results/v2-preview.jsonl
+```
+
+The preview makes no API calls. Live evaluations require both `--live` and `--confirm-billing`, a locally configured `ANTHROPIC_API_KEY`, and a separate results path. Review the [V1 methodology audit](research/v2/v1-audit.md) and [V2 experimental methodology](research/v2/methodology.md) before collecting responses. The protocol must remain frozen once results collection begins.

@@ -2,7 +2,7 @@ name: Research CI
 
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main, "feat/**", "research/**"]
   pull_request:
   workflow_dispatch:
 
@@ -39,3 +39,9 @@ jobs:
           python3 -m pqc_eval validate --dataset /tmp/pqc-cases
           python3 -m pqc_eval run --dataset /tmp/pqc-cases --model claude-preview-only --conditions A,B --trials 1 --limit 2 --out /tmp/pqc-preview.jsonl
           test -s /tmp/pqc-preview.jsonl
+      - name: Validate V2 research corpus end-to-end
+        run: |
+          python3 -m pqc_eval.v2 build --contexts 4 --out /tmp/pqc-v2-cases
+          python3 -m pqc_eval.v2 validate --dataset /tmp/pqc-v2-cases
+          python3 -m pqc_eval.v2 run --dataset /tmp/pqc-v2-cases --model claude-preview-only --conditions A,B,C,D --trials 2 --limit 4 --out /tmp/pqc-v2-preview.jsonl
+          test "$(wc -l < /tmp/pqc-v2-preview.jsonl)" -eq 4
